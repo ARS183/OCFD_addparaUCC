@@ -1,15 +1,14 @@
-program TestforParaUCC
+program Serial
 implicit none
 include 'openNS3d.h'
 real(kind=OCFD_REAL_KIND),allocatable :: x(:),u(:),d2f(:),df(:),dfexat(:)
 real(kind=OCFD_REAL_KIND),allocatable :: xx(:),yy(:),temp_x(:),temp_y(:)
 real(kind=OCFD_REAL_KIND) :: time_start,time_end,ctime
 real(kind=OCFD_REAL_KIND):: aa, pi,erri,errmax1,errmax2,rate_globle
-!real(kind=OCFD_REAL_KIND) :: slx,hx
+
 integer :: ka,k,i,kid,i_global,ii,iii,npx1,npx2,my_mod1
 character*100 filename2
-!integer :: npx0, nx_global, npx1, npx2
-!real(kind=OCFD_REAL_KIND),allocatable:: i_nn, i_offset
+
 
 pi=datan(1.d0)*4.d0
 aa=0.d0
@@ -23,13 +22,13 @@ if (my_id==0) then
 
 	write(*,"(A7,3X,2(A10,3X))")"No.","Err.w.b","Rate"
 	write(11,"(A7,3X,2(A10,3X))")"No.","Err.w.b","Rate"
-  ! Err.w.bºÍErr.wo.b·Ö±ğ±íÊ¾°üÀ¨¡¢²»°üÀ¨±ß½çµãÖµÊ±µÄÎó²î¡£ÓÉÓÚ±ß½ç´¦µÄ¸ñÊ½ÓëÄÚµã¸ñÊ½²»Í¬£¬¹Ê¾ùÓÚ´ËÁĞ³ö
-  ! ÆäºóµÄ½×ÊıRate·Ö±ğÓëÆäÖ®Ç°µÄErr¶ÔÓ¦£¬²»ÔÙ×¸Ğ´ºó×º
+  ! Err.w.bå’ŒErr.wo.båˆ†åˆ«è¡¨ç¤ºåŒ…æ‹¬ã€ä¸åŒ…æ‹¬è¾¹ç•Œç‚¹å€¼æ—¶çš„è¯¯å·®ã€‚ç”±äºè¾¹ç•Œå¤„çš„æ ¼å¼ä¸å†…ç‚¹æ ¼å¼ä¸åŒï¼Œæ•…å‡äºæ­¤åˆ—å‡º
+  ! å…¶åçš„é˜¶æ•°Rateåˆ†åˆ«ä¸å…¶ä¹‹å‰çš„Errå¯¹åº”ï¼Œä¸å†èµ˜å†™åç¼€
 end if
 
 !iii=1
 do iii=1,8
-	! call read_parameter()
+! call read_parameter()
 nx_global=8*2**iii+1
 slx=1.d0
 npx0=np_size
@@ -38,106 +37,23 @@ hx=slx/dble(nx_global-1)
 !call part3d()
 npx=mod(my_id,npx0)
 nx=nx_global/npx0
-if(npx .lt. mod(nx_global,npx0)) nx=nx+1
-
-do k=0,npx0-1
-    ka=min(k,mod(nx_global,npx0))
-    i_offset(k)=int(nx_global/npx0)*k+ka+1
-    i_nn(k)=nx_global/npx0
-    if(k .lt. mod(nx_global,npx0)) i_nn(k)=i_nn(k)+1
-enddo
-npx1=my_mod1(npx-1,npx0)
-npx2=my_mod1(npx+1,npx0)
-ID_XM1=npx1    ! -1 proc in x-direction
-ID_XP1=npx2 
-if(npx .eq. 0) ID_XM1=MPI_PROC_NULL     ! if not periodic, 0 node donot send mesg to npx0-1 node
-if(npx .eq. npx0-1) ID_XP1=MPI_PROC_NULL
-
-allocate(x(1-LAP:nx+LAP),u(1-LAP:nx+LAP))
-allocate(d2f(1-LAP:nx+LAP),df(1-LAP:nx+LAP),dfexat(1-LAP:nx+LAP))
 
 
 !call define_grid(x)
-if (my_id .eq. 0) then
 
-    allocate(xx(1:nx_global))
-    do i=1,nx_global
-        xx(i)=dble(i-1)*hx
-    enddo
-    
-    do 100 i=0,npx0-1		
-		ka=i
-			
-		if (ka .eq. 0) then
-			do ii=1,nx
-					i_global=i_offset(i)-1+ii
-					x(ii)=xx(i_global)
-			enddo
-
-		else
-			allocate(temp_x(1:i_nn(i)))
-			do ii=1,i_nn(i)
-				i_global=i_offset(i)+ii-1
-				temp_x(ii)=xx(i_global)
-			enddo
-					
-	   	    call MPI_SEND(temp_x,i_nn(i),OCFD_DATA_TYPE,  &
-			ka,1,MPI_COMM_WORLD,ierr) 
-
-		    deallocate(temp_x)
-		endif
-100	continue
-
-	deallocate(xx)
-	
-	else
-	    allocate(temp_x(1:i_nn(npx)))
-
-		call MPI_RECV(temp_x,i_nn(npx),OCFD_DATA_TYPE,  &
-        0,1,MPI_COMM_WORLD,status,ierr) 
-        
-		do ii=1,i_nn(npx)
-			x(ii)=temp_x(ii)
-		enddo	
-
-		deallocate(temp_x)
-
-endif
-
-call check_x1d(x)
+x(i)=dble(i-1)*hx
 
 call testfunc(x,u,dfexat)
 
-call check_x1d(u)
-
-
 time_start=MPI_WTIME()
-if (npx==0) then
     call OCFD_D2F_BOUND_PADE4(u,d2f,nx,hx,1)
     call OCFD_D2F_SB_PADE4(u,d2f,nx,hx,1)
     call D2F_PADE4(u,d2f,nx,hx)
     call OCFD_DF_BOUND_UCC45(u,df,nx,hx,1)
     call DF_UCC45_P(u,d2f,df,nx,hx,1)
-elseif (npx==npx0-1) then
-    call OCFD_D2F_BOUND_PADE4(u,d2f,nx,hx,2)
-    call OCFD_D2F_SB_PADE4(u,d2f,nx,hx,2)
-    call D2F_PADE4(u,d2f,nx,hx)
-    call OCFD_DF_SB_UCC45(u,df,nx,hx)
-    call OCFD_DF_BOUND_UCC45(u,df,nx,hx,2)
-    call DF_UCC45_P(u,d2f,df,nx,hx,2)
-else
-    call OCFD_D2F_SB_PADE4(u,d2f,nx,hx,0)
-    call D2F_PADE4(u,d2f,nx,hx)
-    call OCFD_DF_SB_UCC45(u,df,nx,hx)
-    call DF_UCC45_P(u,d2f,df,nx,hx,0)
-endif
 
-erri = maxval(dabs(df(1:nx)-dfexat(1:nx)))
 
-call MPI_Reduce(erri,errmax1,1,OCFD_DATA_TYPE,MPI_MAX,0,MPI_COMM_WORLD,status,ierr)
-
-       
-
+errmax1 = maxval(dabs(df(1:nx)-dfexat(1:nx)))
 
             !write (filename2,"('file-' I4.4 '.dat')") my_id
             !open(unit=my_id,file=filename2)
@@ -163,7 +79,6 @@ enddo
 
 time_end=MPI_WTIME()
 
-call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 
 ctime=time_end-time_start
 if (my_id==0) then
@@ -173,12 +88,10 @@ if (my_id==0) then
 	close(11)
 end if
 
-
-
 !deallocate()
 call MPI_FINALIZE(ierr)
 
-end program TestforParaUCC
+end program Serial
 
 
 
@@ -264,3 +177,4 @@ subroutine display(tar,n,n0)
     !write(*,*)
 
 end subroutine
+end program Serial

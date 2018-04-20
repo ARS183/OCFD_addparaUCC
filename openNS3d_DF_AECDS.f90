@@ -585,6 +585,12 @@ subroutine DF_UCC45_P(u,s,f,n,h,flag)
 			+(-6.d0+18.d0*sig)*u(i+1)-sig*u(i+2))/12.d0/h+(1.d0-sig)*h*s(i)
 			f(i)=(d(i)-(1.d0+sig)*f(i-1))/(2.d0+sig)
 		enddo
+	elseif (flag==12) then
+		do i=3,n-2
+			d(i)=(-3.d0*sig*u(i-2)+(-42.d0-2.d0*sig)*u(i-1)+(48.d0-12.d0*sig)*u(i) &
+			+(-6.d0+18.d0*sig)*u(i+1)-sig*u(i+2))/12.d0/h+(1.d0-sig)*h*s(i)
+			f(i)=(d(i)-(1.d0+sig)*f(i-1))/(2.d0+sig)
+		enddo
 	endif
 	
 end subroutine

@@ -38,19 +38,23 @@ hx=slx/dble(nx_global-1)
 npx=mod(my_id,npx0)
 nx=nx_global/npx0
 
+allocate(x(1-LAP:nx+LAP),u(1-LAP:nx+LAP))
+allocate(d2f(1-LAP:nx+LAP),df(1-LAP:nx+LAP),dfexat(1-LAP:nx+LAP))
 
 !call define_grid(x)
-
-x(i)=dble(i-1)*hx
+do i=1,nx_global
+    x(i)=dble(i-1)*hx
+enddo
 
 call testfunc(x,u,dfexat)
 
 time_start=MPI_WTIME()
     call OCFD_D2F_BOUND_PADE4(u,d2f,nx,hx,1)
-    call OCFD_D2F_SB_PADE4(u,d2f,nx,hx,1)
+    call OCFD_D2F_BOUND_PADE4(u,d2f,nx,hx,2)
     call D2F_PADE4(u,d2f,nx,hx)
     call OCFD_DF_BOUND_UCC45(u,df,nx,hx,1)
-    call DF_UCC45_P(u,d2f,df,nx,hx,1)
+    call OCFD_DF_BOUND_UCC45(u,df,nx,hx,2)
+    call DF_UCC45_P(u,d2f,df,nx,hx,12)
 
 
 errmax1 = maxval(dabs(df(1:nx)-dfexat(1:nx)))
@@ -88,7 +92,6 @@ if (my_id==0) then
 	close(11)
 end if
 
-!deallocate()
 call MPI_FINALIZE(ierr)
 
 end program Serial
@@ -177,4 +180,3 @@ subroutine display(tar,n,n0)
     !write(*,*)
 
 end subroutine
-end program Serial

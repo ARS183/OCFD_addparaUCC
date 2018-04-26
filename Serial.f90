@@ -22,8 +22,8 @@ if (my_id==0) then
 
 	write(*,"(A7,3X,2(A10,3X))")"No.","Err.w.b","Rate"
 	write(11,"(A7,3X,2(A10,3X))")"No.","Err.w.b","Rate"
-  ! Err.w.b和Err.wo.b分别表示包括、不包括边界点值时的误差。由于边界处的格式与内点格式不同，故均于此列出
-  ! 其后的阶数Rate分别与其之前的Err对应，不再赘写后缀
+  ! Err.w.b��Err.wo.b�ֱ��ʾ�������������߽��ֵʱ�������ڱ߽紦�ĸ�ʽ���ڵ��ʽ��ͬ���ʾ��ڴ��г�
+  ! ���Ľ���Rate�ֱ�����֮ǰ��Err��Ӧ������׸д��׺
 end if
 
 !iii=1
